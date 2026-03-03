@@ -1,0 +1,100 @@
+[
+  {
+    "idtag": 8666,
+    "title": "2Cheap",
+    "color": "#43c059",
+    "inherit": true,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 64272,
+    "title": "AFHAAL",
+    "color": "#f000cf",
+    "inherit": false,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 25613,
+    "title": "Bol BE",
+    "color": "#d0d0dd",
+    "inherit": false,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 27013,
+    "title": "Bol NL",
+    "color": "#2929a3",
+    "inherit": true,
+    "textColor": "#FFFFFF"
+  },
+  {
+    "idtag": 8125,
+    "title": "Briefpost",
+    "color": "#1aa8b0",
+    "inherit": true,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 11964,
+    "title": "DHL Small",
+    "color": "#0000f0",
+    "inherit": true,
+    "textColor": "#FFFFFF"
+  },
+  {
+    "idtag": 18778,
+    "title": "DHL XXL",
+    "color": "#2e8b82",
+    "inherit": true,
+    "textColor": "#FFFFFF"
+  },
+  {
+    "idtag": 17307,
+    "title": "DPD",
+    "color": "#e5f000",
+    "inherit": false,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 235835,
+    "title": "Duitsland",
+    "color": "#ffb700",
+    "inherit": true,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 140092,
+    "title": "IN3/BILLINK",
+    "color": "#d4f000",
+    "inherit": false,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 106828,
+    "title": "Keukenmesjes.nl",
+    "color": "#ec2b40",
+    "inherit": true,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 11033,
+    "title": "Speciaal Transport",
+    "color": "#c7b6d8",
+    "inherit": true,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 153905,
+    "title": "VERZENDTYPE ONBEKEND",
+    "color": "#f00600",
+    "inherit": false,
+    "textColor": "#000000"
+  },
+  {
+    "idtag": 235837,
+    "title": "YAXELL Q1 2025 ACTIE",
+    "color": "#000000",
+    "inherit": false,
+    "textColor": "#FFFFFF"
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "idproductfield": 360,
+    "title": "Beschikbaar",
+    "type": "select",
+    "values": [
+      "LEVERTIJD",
+      ""
+    ],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": false,
+    "visible_purchase_order": true,
+    "visible_receipt": true
+  },
+  {
+    "idproductfield": 5745,
+    "title": "Beschikbaar - Aangemaakt op",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": true,
+    "visible_purchase_order": true,
+    "visible_receipt": false
+  },
+  {
+    "idproductfield": 253,
+    "title": "Opmerking Inkoop",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": false,
+    "visible_purchase_order": true,
+    "visible_receipt": true
+  },
+  {
+    "idproductfield": 448,
+    "title": "Opmerking Picking",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": true,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": true,
+    "visible_purchase_order": false,
+    "visible_receipt": false
+  },
+  {
+    "idproductfield": 5156,
+    "title": "Staffel",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": false,
+    "visible_purchase_order": true,
+    "visible_receipt": true
+  },
+  {
+    "idproductfield": 1079,
+    "title": "Verzend",
+    "type": "radio",
+    "values": [
+      "Briefpost",
+      "DHL Small",
+      "DPD",
+      "DHL XXL",
+      "Speciaal Transport",
+      "VERZENDTYPE ONBEKEND"
+    ],
+    "required": false,
+    "visible_picklist": true,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": true,
+    "visible_purchase_order": false,
+    "visible_receipt": true
+  },
+  {
+    "idproductfield": 3223,
+    "title": "VPE",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": false,
+    "visible_purchase_order": true,
+    "visible_receipt": true
+  },
+  {
+    "idproductfield": 5746,
+    "title": "X",
+    "type": "text",
+    "values": [],
+    "required": false,
+    "visible_picklist": false,
+    "visible_invoice": false,
+    "visible_shippinglist": false,
+    "visible_portal": false,
+    "visible_purchase_order": true,
+    "visible_receipt": true
+  }
+]
