@@ -29,7 +29,7 @@ from modules.picqer import PicqerClient
 from modules.sync import sync_product
 
 
-def main():
+def run_sync():
     use_cache = os.getenv("USE_CACHE", "false").lower() == "true"
     dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
 
@@ -64,7 +64,7 @@ def main():
     log.info("Product fields: %s", json.dumps(field_ids, indent=2))
     log.info("Tags: %s", json.dumps(tag_map, indent=2))
 
-    for field in ["Levertijd", "Verzend"]:
+    for field in ["Beschikbaar", "Verzend"]:
         if field not in field_ids:
             log.warning("Required product field '%s' not found in Picqer!", field)
 
@@ -119,4 +119,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_sync()

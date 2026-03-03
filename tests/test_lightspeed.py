@@ -118,3 +118,14 @@ class TestFetchVariants:
         result = client.fetch_variants()
 
         assert result[0]["product_fulltitle"] == ""
+
+
+class TestLoadVariantsFromCache:
+
+    def test_loads_json_from_file(self, tmp_path):
+        cache_file = tmp_path / "variants.json"
+        cache_file.write_text('[{"sku": "TEST-1"}]')
+
+        result = LightspeedClient.load_variants_from_cache(str(cache_file))
+
+        assert result == [{"sku": "TEST-1"}]

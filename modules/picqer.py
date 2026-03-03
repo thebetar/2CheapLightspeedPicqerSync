@@ -17,16 +17,14 @@ class PicqerClient:
             return self._field_ids
 
         url = f"{self.base_url}/api/v1/productfields"
-        resp = requests.get(url, auth=self.auth)
-        resp.raise_for_status()
-        fields = resp.json()
+        response = requests.get(url, auth=self.auth)
+        response.raise_for_status()
+        fields = response.json()
 
         self._field_ids = {}
+
         for f in fields:
-            title = f.get("title", f.get("name", ""))
-            self._field_ids[title] = f["idproductfield"]
-            if f.get("name"):
-                self._field_ids[f["name"]] = f["idproductfield"]
+            self._field_ids[f["title"]] = f["idproductfield"]
 
         log.info("Cached %d product field IDs", len(self._field_ids))
         return self._field_ids
@@ -36,18 +34,21 @@ class PicqerClient:
             return self._tag_map
 
         url = f"{self.base_url}/api/v1/tags"
-        resp = requests.get(url, auth=self.auth)
-        resp.raise_for_status()
-        self._tag_map = {t["name"]: t["idtag"] for t in resp.json()}
+        response = requests.get(url, auth=self.auth)
+        response.raise_for_status()
+        tags = response.json()
+
+        self._tag_map = {t["title"]: t["idtag"] for t in tags}
 
         log.info("Cached %d tag IDs", len(self._tag_map))
         return self._tag_map
 
     def find_product_by_sku(self, sku: str) -> dict | None:
         url = f"{self.base_url}/api/v1/products"
-        resp = requests.get(url, auth=self.auth, params={"productcode": sku})
-        resp.raise_for_status()
-        results = resp.json()
+        response = requests.get(url, auth=self.auth, params={"productcode": sku})
+        response.raise_for_status()
+
+        results = response.json()
 
         if not isinstance(results, list) or not results:
             return None
@@ -56,22 +57,22 @@ class PicqerClient:
 
     def update_product(self, idproduct: int, payload: dict):
         url = f"{self.base_url}/api/v1/products/{idproduct}"
-        resp = requests.put(url, auth=self.auth, json=payload)
-        resp.raise_for_status()
-        return resp.json()
+        response = requests.put(url, auth=self.auth, json=payload)
+        response.raise_for_status()
+        return response.json()
 
     def get_product_tags(self, idproduct: int) -> list[dict]:
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags"
-        resp = requests.get(url, auth=self.auth)
-        resp.raise_for_status()
-        return resp.json()
+        response = requests.get(url, auth=self.auth)
+        response.raise_for_status()
+        return response.json()
 
     def add_product_tag(self, idproduct: int, idtag: int):
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags"
-        resp = requests.post(url, auth=self.auth, json={"idtag": idtag})
-        resp.raise_for_status()
+        response = requests.post(url, auth=self.auth, json={"idtag": idtag})
+        response.raise_for_status()
 
     def remove_product_tag(self, idproduct: int, idtag: int):
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags/{idtag}"
-        resp = requests.delete(url, auth=self.auth)
-        resp.raise_for_status()
+        response = requests.delete(url, auth=self.auth)
+        response.raise_for_status()
