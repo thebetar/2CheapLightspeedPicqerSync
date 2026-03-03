@@ -1,0 +1,130 @@
+[
+  {
+    "id": 236892,
+    "createdAt": "2026-02-11T09:51:20+01:00",
+    "updatedAt": "2026-02-11T09:51:20+01:00",
+    "name": "VERPAKGIGANT",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-3 weken"
+  },
+  {
+    "id": 236341,
+    "createdAt": "2025-12-10T16:25:27+01:00",
+    "updatedAt": "2025-12-10T16:25:51+01:00",
+    "name": "TIROSS",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-2 weken"
+  },
+  {
+    "id": 234757,
+    "createdAt": "2025-07-16T22:09:50+02:00",
+    "updatedAt": "2025-07-16T22:10:05+02:00",
+    "name": "TOOLSTREAM",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  },
+  {
+    "id": 234755,
+    "createdAt": "2025-07-16T17:16:22+02:00",
+    "updatedAt": "2025-07-16T17:16:35+02:00",
+    "name": "PAT EUROPE",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  },
+  {
+    "id": 234754,
+    "createdAt": "2025-07-16T17:08:49+02:00",
+    "updatedAt": "2025-07-16T17:09:01+02:00",
+    "name": "TALEN TOOLS",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  },
+  {
+    "id": 234752,
+    "createdAt": "2025-07-16T16:18:34+02:00",
+    "updatedAt": "2025-07-16T16:18:48+02:00",
+    "name": "CYCLETECH",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  },
+  {
+    "id": 234751,
+    "createdAt": "2025-07-16T15:51:46+02:00",
+    "updatedAt": "2025-07-16T15:52:00+02:00",
+    "name": "INTERBOSCH BV",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  },
+  {
+    "id": 234750,
+    "createdAt": "2025-07-16T15:45:11+02:00",
+    "updatedAt": "2025-12-10T22:44:21+01:00",
+    "name": "UITLOPEND",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Niet op voorraad, Levertijd onbekend"
+  },
+  {
+    "id": 234749,
+    "createdAt": "2025-07-16T15:44:03+02:00",
+    "updatedAt": "2025-07-16T15:44:16+02:00",
+    "name": "SOER",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-3 weken"
+  },
+  {
+    "id": 234748,
+    "createdAt": "2025-07-16T15:42:52+02:00",
+    "updatedAt": "2025-12-11T20:58:59+01:00",
+    "name": "DUTCH FLAME",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-3 weken"
+  },
+  {
+    "id": 234747,
+    "createdAt": "2025-07-16T15:41:48+02:00",
+    "updatedAt": "2025-07-16T15:42:00+02:00",
+    "name": "RETEKESS",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-3 weken"
+  },
+  {
+    "id": 234746,
+    "createdAt": "2025-07-16T15:40:08+02:00",
+    "updatedAt": "2025-07-16T15:40:26+02:00",
+    "name": "REAL PARTS HOLLAND",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-2 weken"
+  },
+  {
+    "id": 234745,
+    "createdAt": "2025-07-16T15:39:16+02:00",
+    "updatedAt": "2025-12-06T19:47:52+01:00",
+    "name": "GEMEA.PL",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-2 weken"
+  },
+  {
+    "id": 234741,
+    "createdAt": "2025-07-16T15:09:52+02:00",
+    "updatedAt": "2025-07-16T15:10:26+02:00",
+    "name": "KTPH",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-2 weken"
+  },
+  {
+    "id": 232909,
+    "createdAt": "2025-02-05T22:13:40+01:00",
+    "updatedAt": "2025-05-13T14:33:57+02:00",
+    "name": "GEKO.PL",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 1-2 weken"
+  },
+  {
+    "id": 229819,
+    "createdAt": "2024-07-30T17:00:45+02:00",
+    "updatedAt": "2025-12-06T19:47:38+01:00",
+    "name": "MAXY.PL",
+    "inStockMessage": "Op werkdagen voor 16:00 besteld, morgen in huis",
+    "outStockMessage": "Op voorraad bij leverancier, levertijd: 3-5 dagen"
+  }
+]
