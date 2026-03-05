@@ -28,6 +28,17 @@ from modules.lightspeed import LightspeedClient
 from modules.picqer import PicqerClient
 from modules.sync import sync_product
 
+TEST_SKUS = [
+    "24327041008",
+    "24327040298",
+    "24327040272",
+    "24327040252",
+    "24327000064",
+    "63753010041",
+    "63753010042",
+    "63753010043",
+]
+
 
 def run_sync():
     use_cache = os.getenv("USE_CACHE", "false").lower() == "true"
@@ -72,7 +83,19 @@ def run_sync():
         if tag not in tag_map:
             log.warning("Required tag '%s' not found in Picqer!", tag)
 
-    # 3) Sync each variant
+    # 3) Fetch all Picqer products and build SKU map
+
+    if use_cache:
+        log.info("Loading Picqer products from cache...")
+        all_picqer_products = PicqerClient.load_products_from_cache()
+    else:
+        all_picqer_products = picqer.fetch_all_products()
+    product_map = {
+        p["productcode"]: p for p in all_picqer_products if p.get("productcode")
+    }
+    log.info("Loaded %d Picqer products into SKU map", len(product_map))
+
+    # 4) Sync each variant
 
     updated = 0
     skipped = 0
@@ -80,21 +103,38 @@ def run_sync():
     total = len(variants)
 
     for i, variant in enumerate(variants, 1):
+        sku = variant.get("sku")
+
+        if not sku:
+            log.warning("Variant %s has no SKU, skipping", variant.get("id"))
+            skipped += 1
+            continue
+
+        if TEST_SKUS and sku not in TEST_SKUS:
+            log.debug("SKU %s not in test list, skipping", sku)
+            skipped += 1
+            continue
+
+        picqer_product = product_map.get(sku)
+
+        if not picqer_product:
+            log.debug("SKU %s not found in Picqer, skipping", sku)
+            skipped += 1
+            continue
+
         try:
-            if sync_product(picqer, variant, field_ids, tag_map, dry_run):
-                updated += 1
-            else:
-                skipped += 1
+            sync_product(picqer, variant, picqer_product, field_ids, tag_map, dry_run)
+            updated += 1
 
         except requests.RequestException as e:
             errors += 1
-            log.error("Error syncing SKU %s: %s", variant.get("sku", "?"), e)
+            log.error("Error syncing SKU %s: %s", sku, e)
 
         except Exception as e:
             errors += 1
             log.error(
                 "Unexpected error syncing SKU %s: %s",
-                variant.get("sku", "?"),
+                sku,
                 e,
                 exc_info=True,
             )

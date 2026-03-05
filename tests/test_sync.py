@@ -113,6 +113,55 @@ class TestBuildProductFields:
         assert {"idproductfield": 20, "value": "Briefpost"} in result
         assert not any(f["idproductfield"] == 30 for f in result)
 
+    def test_no_timestamp_when_changed_to_empty(self):
+        field_ids = {
+            "Beschikbaar": 10,
+            "Verzend": 20,
+            "Beschikbaar - Aangemaakt op": 30,
+        }
+
+        result = build_product_fields(
+            field_ids, "Briefpost", "", beschikbaar_changed=True
+        )
+
+        assert {"idproductfield": 10, "value": ""} in result
+        assert {"idproductfield": 20, "value": "Briefpost"} in result
+        assert not any(f["idproductfield"] == 30 for f in result)
+
+    def test_no_timestamp_when_unchanged_and_levertijd_with_existing_aangemaakt(self):
+        field_ids = {
+            "Beschikbaar": 10,
+            "Verzend": 20,
+            "Beschikbaar - Aangemaakt op": 30,
+        }
+
+        result = build_product_fields(
+            field_ids,
+            "Briefpost",
+            "LEVERTIJD",
+            beschikbaar_changed=False,
+            current_aangemaakt="2026-01-01 00:00:00",
+        )
+
+        assert not any(f["idproductfield"] == 30 for f in result)
+
+    def test_timestamp_when_levertijd_unchanged_but_aangemaakt_empty(self):
+        field_ids = {
+            "Beschikbaar": 10,
+            "Verzend": 20,
+            "Beschikbaar - Aangemaakt op": 30,
+        }
+
+        result = build_product_fields(
+            field_ids,
+            "DHL Small",
+            "LEVERTIJD",
+            beschikbaar_changed=False,
+            current_aangemaakt="",
+        )
+
+        assert any(f["idproductfield"] == 30 and f["value"] != "" for f in result)
+
     def test_empty_values_for_indicator(self):
         field_ids = {"Beschikbaar": 10, "Verzend": 20}
 
@@ -220,13 +269,15 @@ class TestSyncProduct:
         "Beschikbaar - Aangemaakt op": 30,
     }
 
-    def _make_picqer(self, found_product: dict | None = None) -> MagicMock:
-        if found_product and "productfields" not in found_product:
-            found_product["productfields"] = []
+    def _make_picqer(self) -> MagicMock:
         picqer = MagicMock()
-        picqer.find_product_by_sku.return_value = found_product
         picqer.get_product_tags.return_value = []
         return picqer
+
+    def _make_product(self, **overrides) -> dict:
+        base = {"idproduct": 42, "productfields": []}
+        base.update(overrides)
+        return base
 
     def _make_variant(self, **overrides) -> dict:
         base = {
@@ -241,25 +292,20 @@ class TestSyncProduct:
 
     def test_skips_variant_without_sku(self):
         picqer = self._make_picqer()
-        result = sync_product(picqer, {"weight": 25}, self.FIELD_IDS, self.TAG_MAP)
+        product = self._make_product()
+        result = sync_product(
+            picqer, {"weight": 25}, product, self.FIELD_IDS, self.TAG_MAP
+        )
 
-        assert result is False
-        picqer.find_product_by_sku.assert_not_called()
-
-    def test_skips_when_not_found_in_picqer(self):
-        picqer = self._make_picqer(found_product=None)
-        variant = self._make_variant()
-
-        result = sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
-
-        assert result is False
-        picqer.update_product.assert_not_called()
+        assert result is True
+        picqer.update_product.assert_called_once()
 
     def test_updates_product_with_correct_payload(self):
-        picqer = self._make_picqer(found_product={"idproduct": 42})
+        picqer = self._make_picqer()
+        product = self._make_product()
         variant = self._make_variant(weight=1001, stockTracking="indicator")
 
-        result = sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        result = sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         assert result is True
 
@@ -270,10 +316,11 @@ class TestSyncProduct:
         assert {"idproductfield": 10, "value": ""} in payload["productfields"]
 
     def test_enabled_stock_tracking_sets_beschikbaar(self):
-        picqer = self._make_picqer(found_product={"idproduct": 42})
+        picqer = self._make_picqer()
+        product = self._make_product()
         variant = self._make_variant(stockTracking="enabled")
 
-        sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         payload = picqer.update_product.call_args[0][1]
 
@@ -288,10 +335,11 @@ class TestSyncProduct:
         assert aangemaakt["value"] != ""
 
     def test_indicator_stock_tracking_clears_beschikbaar(self):
-        picqer = self._make_picqer(found_product={"idproduct": 42})
+        picqer = self._make_picqer()
+        product = self._make_product()
         variant = self._make_variant(stockTracking="indicator")
 
-        sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         payload = picqer.update_product.call_args[0][1]
 
@@ -301,29 +349,34 @@ class TestSyncProduct:
         assert beschikbaar["value"] == ""
 
     def test_no_timestamp_when_beschikbaar_unchanged(self):
-        picqer = self._make_picqer(
-            found_product={
-                "idproduct": 42,
-                "productfields": [{"title": "Beschikbaar", "value": "LEVERTIJD"}],
-            }
+        picqer = self._make_picqer()
+        product = self._make_product(
+            productfields=[
+                {"title": "Beschikbaar", "value": "LEVERTIJD"},
+                {
+                    "title": "Beschikbaar - Aangemaakt op",
+                    "value": "2026-01-01 00:00:00",
+                },
+            ],
         )
         variant = self._make_variant(stockTracking="enabled")
 
-        sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         payload = picqer.update_product.call_args[0][1]
         assert not any(f["idproductfield"] == 30 for f in payload["productfields"])
 
-    def test_timestamp_set_when_beschikbaar_changes(self):
-        picqer = self._make_picqer(
-            found_product={
-                "idproduct": 42,
-                "productfields": [{"title": "Beschikbaar", "value": ""}],
-            }
+    def test_timestamp_set_when_levertijd_unchanged_but_aangemaakt_empty(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            productfields=[
+                {"title": "Beschikbaar", "value": "LEVERTIJD"},
+                {"title": "Beschikbaar - Aangemaakt op", "value": ""},
+            ],
         )
         variant = self._make_variant(stockTracking="enabled")
 
-        sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         payload = picqer.update_product.call_args[0][1]
         aangemaakt = next(
@@ -331,11 +384,43 @@ class TestSyncProduct:
         )
         assert aangemaakt["value"] != ""
 
+    def test_timestamp_set_when_beschikbaar_changes(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            productfields=[{"title": "Beschikbaar", "value": ""}],
+        )
+        variant = self._make_variant(stockTracking="enabled")
+
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        payload = picqer.update_product.call_args[0][1]
+        aangemaakt = next(
+            f for f in payload["productfields"] if f["idproductfield"] == 30
+        )
+        assert aangemaakt["value"] != ""
+
+    def test_no_timestamp_when_beschikbaar_changes_away_from_levertijd(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            productfields=[{"title": "Beschikbaar", "value": "LEVERTIJD"}],
+        )
+        variant = self._make_variant(stockTracking="indicator")
+
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        payload = picqer.update_product.call_args[0][1]
+        beschikbaar = next(
+            f for f in payload["productfields"] if f["idproductfield"] == 10
+        )
+        assert beschikbaar["value"] == ""
+        assert not any(f["idproductfield"] == 30 for f in payload["productfields"])
+
     def test_null_weight_sends_zero_and_unknown_shipping(self):
-        picqer = self._make_picqer(found_product={"idproduct": 42})
+        picqer = self._make_picqer()
+        product = self._make_product()
         variant = self._make_variant(weight=0)
 
-        sync_product(picqer, variant, self.FIELD_IDS, self.TAG_MAP)
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
 
         payload = picqer.update_product.call_args[0][1]
         assert payload["weight"] == 0
@@ -344,11 +429,12 @@ class TestSyncProduct:
         assert verzend["value"] == "VERZENDTYPE ONBEKEND"
 
     def test_dry_run_does_not_call_api(self):
-        picqer = self._make_picqer(found_product={"idproduct": 42})
+        picqer = self._make_picqer()
+        product = self._make_product()
         variant = self._make_variant()
 
         result = sync_product(
-            picqer, variant, self.FIELD_IDS, self.TAG_MAP, dry_run=True
+            picqer, variant, product, self.FIELD_IDS, self.TAG_MAP, dry_run=True
         )
 
         assert result is True

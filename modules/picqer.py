@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 from modules.config import log
@@ -9,51 +11,86 @@ class PicqerClient:
         self.base_url = base_url.rstrip("/")
         self.auth = (api_key, "")
 
-        self._field_ids: dict[str, int] | None = None
-        self._tag_map: dict[str, int] | None = None
+        self.productfields_title_id_map: dict[str, int] | None = None
+        self.tags_title_id_map: dict[str, int] | None = None
 
     def get_field_ids(self) -> dict[str, int]:
-        if self._field_ids is not None:
-            return self._field_ids
+        if self.productfields_title_id_map is not None:
+            return self.productfields_title_id_map
 
         url = f"{self.base_url}/api/v1/productfields"
         response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         fields = response.json()
 
-        self._field_ids = {}
+        with open("data/picqer_fields.json", "w") as f:
+            json.dump(fields, f, indent=2)
+
+        self.productfields_title_id_map = {}
 
         for f in fields:
-            self._field_ids[f["title"]] = f["idproductfield"]
+            self.productfields_title_id_map[f["title"]] = f["idproductfield"]
 
-        log.info("Cached %d product field IDs", len(self._field_ids))
-        return self._field_ids
+        with open("data/picqer_field_ids.json", "w") as f:
+            json.dump(self.productfields_title_id_map, f, indent=2)
+
+        log.info("Cached %d product field IDs", len(self.productfields_title_id_map))
+        return self.productfields_title_id_map
 
     def get_tag_map(self) -> dict[str, int]:
-        if self._tag_map is not None:
-            return self._tag_map
+        if self.tags_title_id_map is not None:
+            return self.tags_title_id_map
 
         url = f"{self.base_url}/api/v1/tags"
         response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         tags = response.json()
 
-        self._tag_map = {t["title"]: t["idtag"] for t in tags}
+        with open("data/picqer_tags.json", "w") as f:
+            json.dump(tags, f, indent=2)
 
-        log.info("Cached %d tag IDs", len(self._tag_map))
-        return self._tag_map
+        self.tags_title_id_map = {t["title"]: t["idtag"] for t in tags}
 
-    def find_product_by_sku(self, sku: str) -> dict | None:
+        with open("data/picqer_tag_ids.json", "w") as f:
+            json.dump(self.tags_title_id_map, f, indent=2)
+
+        log.info("Cached %d tag IDs", len(self.tags_title_id_map))
+        return self.tags_title_id_map
+
+    def fetch_all_products(self) -> list[dict]:
         url = f"{self.base_url}/api/v1/products"
-        response = requests.get(url, auth=self.auth, params={"productcode": sku})
-        response.raise_for_status()
+        all_products: list[dict] = []
+        offset = 0
 
-        results = response.json()
+        while True:
+            response = requests.get(url, auth=self.auth, params={"offset": offset})
+            response.raise_for_status()
+            products = response.json()
 
-        if not isinstance(results, list) or not results:
-            return None
+            if not products:
+                break
 
-        return results[0]
+            all_products.extend(products)
+            log.info(
+                "Fetched %d Picqer products (total: %d)",
+                len(products),
+                len(all_products),
+            )
+
+            if len(products) < 100:
+                break
+
+            offset = len(all_products)
+
+        with open("data/picqer_products.json", "w") as f:
+            json.dump(all_products, f, indent=2)
+
+        return all_products
+
+    @staticmethod
+    def load_products_from_cache(path: str = "data/picqer_products.json") -> list[dict]:
+        with open(path, "r") as f:
+            return json.load(f)
 
     def update_product(self, idproduct: int, payload: dict):
         url = f"{self.base_url}/api/v1/products/{idproduct}"

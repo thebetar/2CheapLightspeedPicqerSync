@@ -1,5 +1,5 @@
 import json
-
+import time
 import requests
 
 from modules.config import log
@@ -16,23 +16,38 @@ class LightspeedClient:
         all_items: list = []
 
         while True:
-            url = f"{self.base_url}/nl/{resource}.json"
-            resp = requests.get(
-                url, auth=self.auth, params={"limit": 250, "page": page}
-            )
-            resp.raise_for_status()
-            items = resp.json().get(resource, [])
+            try:
+                url = f"{self.base_url}/nl/{resource}.json"
+                resp = requests.get(
+                    url, auth=self.auth, params={"limit": 250, "page": page}
+                )
+                resp.raise_for_status()
+                items = resp.json().get(resource, [])
 
-            if not items:
+                if not items:
+                    break
+
+                all_items.extend(items)
+                log.info(
+                    "Fetched %d %s (total: %d)", len(items), resource, len(all_items)
+                )
+
+                if len(items) < 250:
+                    break
+
+                page += 1
+            except requests.RequestException as e:
+                # Check if 429 and log retry time if available
+                if e.response is not None and e.response.status_code == 429:
+                    log.warning(
+                        "Rate limited when fetching %s page %d. No retry time provided (sleeping for 120 seconds).",
+                        resource,
+                        page,
+                    )
+                    time.sleep(120)
+
+                log.error("Error fetching %s page %d: %s", resource, page, e)
                 break
-
-            all_items.extend(items)
-            log.info("Fetched %d %s (total: %d)", len(items), resource, len(all_items))
-
-            if len(items) < 250:
-                break
-
-            page += 1
 
         return all_items
 
@@ -52,10 +67,15 @@ class LightspeedClient:
             v["product_fulltitle"] = product.get("fulltitle", "")
             v["product_data01"] = product.get("data01", "")
 
+        with open("data/lightspeed_variants.json", "w") as f:
+            json.dump(variants, f, indent=2)
+
         log.info("Total variants to sync: %d", len(variants))
         return variants
 
     @staticmethod
-    def load_variants_from_cache(path: str = "lightspeed_variants.json") -> list[dict]:
+    def load_variants_from_cache(
+        path: str = "data/lightspeed_variants.json",
+    ) -> list[dict]:
         with open(path, "r") as f:
             return json.load(f)

@@ -68,27 +68,44 @@ class TestPicqerClientTagMap:
         assert tags == {"Briefpost": 8125, "DHL Small": 11964}
 
 
-class TestFindProductBySku:
+class TestFetchAllProducts:
 
     @patch("modules.picqer.requests.get")
-    def test_returns_first_match(self, mock_get, client):
+    def test_single_page(self, mock_get, client):
         mock_get.return_value = MagicMock(status_code=200)
         mock_get.return_value.json.return_value = [
-            {"idproduct": 42, "productcode": "SKU1"}
+            {"idproduct": 1, "productcode": "SKU1"},
+            {"idproduct": 2, "productcode": "SKU2"},
         ]
 
-        result = client.find_product_by_sku("SKU1")
+        result = client.fetch_all_products()
 
-        assert result == {"idproduct": 42, "productcode": "SKU1"}
+        assert len(result) == 2
+        assert mock_get.call_count == 1
 
     @patch("modules.picqer.requests.get")
-    def test_returns_none_when_empty(self, mock_get, client):
+    def test_multiple_pages(self, mock_get, client):
+        page1 = MagicMock(status_code=200)
+        page1.json.return_value = [{"idproduct": i} for i in range(100)]
+
+        page2 = MagicMock(status_code=200)
+        page2.json.return_value = [{"idproduct": 100}]
+
+        mock_get.side_effect = [page1, page2]
+
+        result = client.fetch_all_products()
+
+        assert len(result) == 101
+        assert mock_get.call_count == 2
+
+    @patch("modules.picqer.requests.get")
+    def test_empty(self, mock_get, client):
         mock_get.return_value = MagicMock(status_code=200)
         mock_get.return_value.json.return_value = []
 
-        result = client.find_product_by_sku("NONEXISTENT")
+        result = client.fetch_all_products()
 
-        assert result is None
+        assert result == []
 
 
 class TestUpdateProduct:
@@ -151,3 +168,14 @@ class TestRemoveProductTag:
             "https://test.picqer.com/api/v1/products/42/tags/5",
             auth=("test-api-key", ""),
         )
+
+
+class TestLoadProductsFromCache:
+
+    def test_loads_json_from_file(self, tmp_path):
+        cache_file = tmp_path / "products.json"
+        cache_file.write_text('[{"idproduct": 1, "productcode": "SKU-1"}]')
+
+        result = PicqerClient.load_products_from_cache(str(cache_file))
+
+        assert result == [{"idproduct": 1, "productcode": "SKU-1"}]

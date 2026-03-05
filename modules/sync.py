@@ -91,6 +91,7 @@ def build_product_fields(
     shipping_option: str,
     beschikbaar_value: str,
     beschikbaar_changed: bool,
+    current_aangemaakt: str = "",
 ) -> list[dict]:
     fields: list[dict] = []
 
@@ -104,7 +105,11 @@ def build_product_fields(
             {"idproductfield": field_ids["Verzend"], "value": shipping_option}
         )
 
-    if not beschikbaar_changed:
+    needs_timestamp = beschikbaar_value == "LEVERTIJD" and (
+        beschikbaar_changed or not current_aangemaakt
+    )
+
+    if not needs_timestamp:
         return fields
 
     if "Beschikbaar - Aangemaakt op" in field_ids:
@@ -121,22 +126,12 @@ def build_product_fields(
 def sync_product(
     picqer: PicqerClient,
     variant: dict,
+    picqer_product: dict,
     field_ids: dict[str, int],
     tag_map: dict[str, int],
     dry_run: bool = False,
 ) -> bool:
     sku = variant.get("sku")
-
-    if not sku:
-        log.warning("Variant %s has no SKU, skipping", variant.get("id"))
-        return False
-
-    picqer_product = picqer.find_product_by_sku(sku)
-
-    if not picqer_product:
-        log.debug("SKU %s not found in Picqer, skipping", sku)
-        return False
-
     idproduct = picqer_product["idproduct"]
 
     weight_grams = get_weight_grams(variant)
@@ -147,10 +142,12 @@ def sync_product(
     beschikbaar_value = "LEVERTIJD" if stock_tracking == "enabled" else ""
 
     current_beschikbaar = ""
+    current_aangemaakt = ""
     for pf in picqer_product.get("productfields", []):
         if pf.get("title") == "Beschikbaar":
             current_beschikbaar = pf.get("value", "")
-            break
+        if pf.get("title") == "Beschikbaar - Aangemaakt op":
+            current_aangemaakt = pf.get("value", "")
 
     beschikbaar_changed = beschikbaar_value != current_beschikbaar
 
@@ -159,6 +156,7 @@ def sync_product(
         shipping_option=shipping_option,
         beschikbaar_value=beschikbaar_value,
         beschikbaar_changed=beschikbaar_changed,
+        current_aangemaakt=current_aangemaakt,
     )
 
     payload = {
