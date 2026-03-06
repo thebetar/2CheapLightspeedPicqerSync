@@ -137,7 +137,7 @@ def sync_product(
     weight_grams = get_weight_grams(variant)
     shipping_option = determine_shipping_option(weight_grams)
     stock_tracking = variant.get("stockTracking", "")
-    title_long = variant.get("product_fulltitle", "")
+    title_long = variant.get("product_title", "")
 
     beschikbaar_value = "LEVERTIJD" if stock_tracking == "enabled" else ""
 
