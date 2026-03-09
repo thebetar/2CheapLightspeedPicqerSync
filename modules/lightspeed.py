@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from typing import Dict, List, Tuple
 import requests
 from dotenv import load_dotenv
 
@@ -55,7 +56,7 @@ class LightspeedClient:
 
         return all_items
 
-    def fetch_variants(self) -> tuple[list[dict], list[dict]]:
+    def fetch_variants(self) -> Tuple[List[Dict], List[Dict]]:
         log.info("Fetching Lightspeed products...")
         products = self.fetch_all("products")
         product_map = {p["id"]: p for p in products}
@@ -83,7 +84,7 @@ class LightspeedClient:
     @staticmethod
     def load_variants_from_cache(
         path: str = "data/lightspeed_variants.json",
-    ) -> list[dict]:
+    ) -> List[Dict]:
         with open(path, "r") as f:
             return json.load(f)
 
