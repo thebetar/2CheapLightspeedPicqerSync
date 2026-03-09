@@ -90,6 +90,7 @@ def run_sync():
         all_picqer_products = PicqerClient.load_products_from_cache()
     else:
         all_picqer_products = picqer.fetch_all_products()
+
     product_map = {
         p["productcode"]: p for p in all_picqer_products if p.get("productcode")
     }

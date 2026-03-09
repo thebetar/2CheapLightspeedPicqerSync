@@ -1,6 +1,10 @@
+import os
 import json
 import time
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from modules.config import log
 
@@ -51,10 +55,13 @@ class LightspeedClient:
 
         return all_items
 
-    def fetch_variants(self) -> list[dict]:
+    def fetch_variants(self) -> tuple[list[dict], list[dict]]:
         log.info("Fetching Lightspeed products...")
         products = self.fetch_all("products")
         product_map = {p["id"]: p for p in products}
+
+        with open("data/lightspeed_products.json", "w") as f:
+            json.dump(products, f, indent=2)
 
         log.info("Fetching Lightspeed variants...")
         variants = self.fetch_all("variants")
@@ -71,7 +78,7 @@ class LightspeedClient:
             json.dump(variants, f, indent=2)
 
         log.info("Total variants to sync: %d", len(variants))
-        return variants
+        return variants, products
 
     @staticmethod
     def load_variants_from_cache(
@@ -79,3 +86,13 @@ class LightspeedClient:
     ) -> list[dict]:
         with open(path, "r") as f:
             return json.load(f)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    url = os.getenv("LIGHTSPEED_BASE_URL")
+    key = os.getenv("LIGHTSPEED_API_KEY")
+    secret = os.getenv("LIGHTSPEED_API_SECRET")
+
+    lightspeed = LightspeedClient(url, key, secret)
+    variants = lightspeed.fetch_variants()
+    log.info("Fetched %d variants", len(variants))

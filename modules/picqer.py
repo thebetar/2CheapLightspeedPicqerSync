@@ -1,6 +1,9 @@
+import os
 import json
-
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from modules.config import log
 
@@ -113,3 +116,18 @@ class PicqerClient:
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags/{idtag}"
         response = requests.delete(url, auth=self.auth)
         response.raise_for_status()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    picqer_url = os.getenv("PICQER_BASE_URL")
+    picqer_key = os.getenv("PICQER_API_KEY")
+
+    picqer = PicqerClient(base_url=picqer_url, api_key=picqer_key)
+
+    field_ids = picqer.get_field_ids()
+    tag_map = picqer.get_tag_map()
+
+    # 3) Load all Picqer products into a map by SKU
+    products = picqer.fetch_all_products()
+    products_by_sku = {p["productcode"]: p for p in products}
+    log.info("Loaded %d Picqer products into SKU map", len(products_by_sku))
