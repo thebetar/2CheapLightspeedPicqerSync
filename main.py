@@ -64,7 +64,7 @@ def run_sync():
         lightspeed = LightspeedClient(
             LIGHTSPEED_BASE_URL, LIGHTSPEED_API_KEY, LIGHTSPEED_API_SECRET
         )
-        variants = lightspeed.fetch_variants()
+        variants, _ = lightspeed.fetch_variants()
 
     # 2) Initialise Picqer client & cache lookups
 
