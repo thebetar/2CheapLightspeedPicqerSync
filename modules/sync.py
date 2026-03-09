@@ -1,11 +1,12 @@
 import json
 from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
 from modules.config import SHIPPING_OPTIONS, WEIGHT_SHIPPING_MAP, log
 from modules.picqer import PicqerClient
 
 
-def get_weight_grams(variant: dict) -> int | None:
+def get_weight_grams(variant: dict) -> Optional[int]:
     weight = variant.get("weight")
 
     if not weight:
@@ -19,7 +20,7 @@ def get_weight_grams(variant: dict) -> int | None:
     return int(weight)
 
 
-def determine_shipping_option(weight_grams: int | None) -> str:
+def determine_shipping_option(weight_grams: Optional[int]) -> str:
     if not weight_grams:
         return "VERZENDTYPE ONBEKEND"
 
@@ -42,7 +43,7 @@ def manage_shipping_tags(
     picqer: PicqerClient,
     idproduct: int,
     target_option: str,
-    tag_map: dict[str, int],
+    tag_map: Dict[str, int],
     dry_run: bool = False,
 ):
     current_tags = picqer.get_product_tags(idproduct)
@@ -87,13 +88,13 @@ def manage_shipping_tags(
 
 
 def build_product_fields(
-    field_ids: dict[str, int],
+    field_ids: Dict[str, int],
     shipping_option: str,
     beschikbaar_value: str,
     beschikbaar_changed: bool,
     current_aangemaakt: str = "",
-) -> list[dict]:
-    fields: list[dict] = []
+) -> List[Dict]:
+    fields: List[Dict] = []
 
     if "Beschikbaar" in field_ids:
         fields.append(
@@ -127,8 +128,8 @@ def sync_product(
     picqer: PicqerClient,
     variant: dict,
     picqer_product: dict,
-    field_ids: dict[str, int],
-    tag_map: dict[str, int],
+    field_ids: Dict[str, int],
+    tag_map: Dict[str, int],
     dry_run: bool = False,
 ) -> bool:
     sku = variant.get("sku")

@@ -1,5 +1,6 @@
 import os
 import json
+from typing import Dict, List, Optional
 import requests
 from dotenv import load_dotenv
 
@@ -14,10 +15,10 @@ class PicqerClient:
         self.base_url = base_url.rstrip("/")
         self.auth = (api_key, "")
 
-        self.productfields_title_id_map: dict[str, int] | None = None
-        self.tags_title_id_map: dict[str, int] | None = None
+        self.productfields_title_id_map: Optional[Dict[str, int]] = None
+        self.tags_title_id_map: Optional[Dict[str, int]] = None
 
-    def get_field_ids(self) -> dict[str, int]:
+    def get_field_ids(self) -> Dict[str, int]:
         if self.productfields_title_id_map is not None:
             return self.productfields_title_id_map
 
@@ -40,7 +41,7 @@ class PicqerClient:
         log.info("Cached %d product field IDs", len(self.productfields_title_id_map))
         return self.productfields_title_id_map
 
-    def get_tag_map(self) -> dict[str, int]:
+    def get_tag_map(self) -> Dict[str, int]:
         if self.tags_title_id_map is not None:
             return self.tags_title_id_map
 
@@ -60,9 +61,9 @@ class PicqerClient:
         log.info("Cached %d tag IDs", len(self.tags_title_id_map))
         return self.tags_title_id_map
 
-    def fetch_all_products(self) -> list[dict]:
+    def fetch_all_products(self) -> List[Dict]:
         url = f"{self.base_url}/api/v1/products"
-        all_products: list[dict] = []
+        all_products: List[Dict] = []
         offset = 0
 
         while True:
@@ -91,7 +92,7 @@ class PicqerClient:
         return all_products
 
     @staticmethod
-    def load_products_from_cache(path: str = "data/picqer_products.json") -> list[dict]:
+    def load_products_from_cache(path: str = "data/picqer_products.json") -> List[Dict]:
         with open(path, "r") as f:
             return json.load(f)
 
@@ -101,7 +102,7 @@ class PicqerClient:
         response.raise_for_status()
         return response.json()
 
-    def get_product_tags(self, idproduct: int) -> list[dict]:
+    def get_product_tags(self, idproduct: int) -> List[Dict]:
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags"
         response = requests.get(url, auth=self.auth)
         response.raise_for_status()

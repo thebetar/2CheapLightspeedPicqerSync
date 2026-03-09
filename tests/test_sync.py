@@ -1,5 +1,6 @@
 """Tests for modules/sync.py — weight, shipping, tag management, and product sync."""
 
+from typing import Dict, List
 from unittest.mock import MagicMock, call, patch
 from datetime import datetime
 
@@ -193,7 +194,7 @@ class TestManageShippingTags:
         "VERZENDTYPE ONBEKEND": 6,
     }
 
-    def _make_picqer(self, current_tags: list[dict]) -> MagicMock:
+    def _make_picqer(self, current_tags: List[Dict]) -> MagicMock:
         picqer = MagicMock()
         picqer.get_product_tags.return_value = current_tags
         return picqer
