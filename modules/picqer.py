@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from typing import Dict, List, Optional
 import requests
 from dotenv import load_dotenv
@@ -18,13 +19,28 @@ class PicqerClient:
         self.productfields_title_id_map: Optional[Dict[str, int]] = None
         self.tags_title_id_map: Optional[Dict[str, int]] = None
 
+    def _request(self, method, url: str, **kwargs):
+        """Make an HTTP request, retrying up to 5 times on 429 with a 60-second wait."""
+        for attempt in range(1, 6):
+            response = method(url, **kwargs)
+            if response.status_code != 429:
+                response.raise_for_status()
+                return response
+            if attempt < 5:
+                log.warning(
+                    "Rate limited (429) on %s, waiting 60 s before retry %d/5...",
+                    url,
+                    attempt,
+                )
+                time.sleep(60)
+        raise RuntimeError(f"Rate limited after 5 retries: {url}")
+
     def get_field_ids(self) -> Dict[str, int]:
         if self.productfields_title_id_map is not None:
             return self.productfields_title_id_map
 
         url = f"{self.base_url}/api/v1/productfields"
-        response = requests.get(url, auth=self.auth)
-        response.raise_for_status()
+        response = self._request(requests.get, url, auth=self.auth)
         fields = response.json()
 
         with open("data/picqer_fields.json", "w") as f:
@@ -46,8 +62,7 @@ class PicqerClient:
             return self.tags_title_id_map
 
         url = f"{self.base_url}/api/v1/tags"
-        response = requests.get(url, auth=self.auth)
-        response.raise_for_status()
+        response = self._request(requests.get, url, auth=self.auth)
         tags = response.json()
 
         with open("data/picqer_tags.json", "w") as f:
@@ -67,8 +82,9 @@ class PicqerClient:
         offset = 0
 
         while True:
-            response = requests.get(url, auth=self.auth, params={"offset": offset})
-            response.raise_for_status()
+            response = self._request(
+                requests.get, url, auth=self.auth, params={"offset": offset}
+            )
             products = response.json()
 
             if not products:
@@ -98,25 +114,21 @@ class PicqerClient:
 
     def update_product(self, idproduct: int, payload: dict):
         url = f"{self.base_url}/api/v1/products/{idproduct}"
-        response = requests.put(url, auth=self.auth, json=payload)
-        response.raise_for_status()
+        response = self._request(requests.put, url, auth=self.auth, json=payload)
         return response.json()
 
     def get_product_tags(self, idproduct: int) -> List[Dict]:
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags"
-        response = requests.get(url, auth=self.auth)
-        response.raise_for_status()
+        response = self._request(requests.get, url, auth=self.auth)
         return response.json()
 
     def add_product_tag(self, idproduct: int, idtag: int):
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags"
-        response = requests.post(url, auth=self.auth, json={"idtag": idtag})
-        response.raise_for_status()
+        self._request(requests.post, url, auth=self.auth, json={"idtag": idtag})
 
     def remove_product_tag(self, idproduct: int, idtag: int):
         url = f"{self.base_url}/api/v1/products/{idproduct}/tags/{idtag}"
-        response = requests.delete(url, auth=self.auth)
-        response.raise_for_status()
+        self._request(requests.delete, url, auth=self.auth)
 
 
 if __name__ == "__main__":  # pragma: no cover

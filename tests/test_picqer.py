@@ -3,6 +3,7 @@
 from unittest.mock import patch, MagicMock
 
 import pytest
+import requests
 
 from modules.picqer import PicqerClient
 
@@ -179,3 +180,95 @@ class TestLoadProductsFromCache:
         result = PicqerClient.load_products_from_cache(str(cache_file))
 
         assert result == [{"idproduct": 1, "productcode": "SKU-1"}]
+
+
+# -- _request retry logic ----------------------------------------------------
+
+
+class TestRequestRetry:
+
+    def _make_response(self, status_code: int, body=None):
+        r = MagicMock(status_code=status_code)
+        r.json.return_value = body or {}
+        r.raise_for_status.return_value = None
+        return r
+
+    def _make_429(self):
+        r = MagicMock(status_code=429)
+        return r
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.put")
+    def test_retries_once_after_429_and_succeeds(self, mock_put, mock_sleep, client):
+        mock_put.side_effect = [
+            self._make_429(),
+            self._make_response(200, {"idproduct": 1}),
+        ]
+
+        result = client.update_product(1, {"name": "Test"})
+
+        assert result == {"idproduct": 1}
+        assert mock_put.call_count == 2
+        mock_sleep.assert_called_once_with(60)
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.get")
+    def test_retries_on_429_for_get_products(self, mock_get, mock_sleep, client):
+        ok = self._make_response(200, [{"idproduct": 1, "productcode": "A"}])
+        mock_get.side_effect = [self._make_429(), ok]
+
+        result = client.get_product_tags(1)
+
+        assert result == [{"idproduct": 1, "productcode": "A"}]
+        assert mock_get.call_count == 2
+        mock_sleep.assert_called_once_with(60)
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.put")
+    def test_raises_after_5_retries(self, mock_put, mock_sleep, client):
+        mock_put.return_value = self._make_429()
+
+        with pytest.raises(RuntimeError, match="Rate limited after 5 retries"):
+            client.update_product(1, {"name": "Test"})
+
+        assert mock_put.call_count == 5
+        assert mock_sleep.call_count == 4  # sleeps between attempts 1-4, not after 5th
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.put")
+    def test_no_sleep_on_success(self, mock_put, mock_sleep, client):
+        mock_put.return_value = self._make_response(200, {"idproduct": 1})
+
+        client.update_product(1, {"name": "Test"})
+
+        mock_sleep.assert_not_called()
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.put")
+    def test_non_429_error_raises_immediately(self, mock_put, mock_sleep, client):
+        r = MagicMock(status_code=500)
+        r.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
+        mock_put.return_value = r
+
+        with pytest.raises(requests.HTTPError):
+            client.update_product(1, {"name": "Test"})
+
+        assert mock_put.call_count == 1
+        mock_sleep.assert_not_called()
+
+    @patch("modules.picqer.time.sleep")
+    @patch("modules.picqer.requests.put")
+    def test_succeeds_on_fifth_attempt(self, mock_put, mock_sleep, client):
+        mock_put.side_effect = [
+            self._make_429(),
+            self._make_429(),
+            self._make_429(),
+            self._make_429(),
+            self._make_response(200, {"idproduct": 99}),
+        ]
+
+        result = client.update_product(99, {"name": "Last Try"})
+
+        assert result == {"idproduct": 99}
+        assert mock_put.call_count == 5
+        assert mock_sleep.call_count == 4

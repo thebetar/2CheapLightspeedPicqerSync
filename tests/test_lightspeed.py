@@ -90,7 +90,7 @@ class TestFetchVariants:
 
         mock_get.side_effect = [products_resp, variants_resp]
 
-        result = client.fetch_variants()
+        result, _ = client.fetch_variants()
 
         assert len(result) == 1
         assert result[0]["product_title"] == "Short"
@@ -115,7 +115,7 @@ class TestFetchVariants:
 
         mock_get.side_effect = [products_resp, variants_resp]
 
-        result = client.fetch_variants()
+        result, _ = client.fetch_variants()
 
         assert result[0]["product_fulltitle"] == ""
 

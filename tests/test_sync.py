@@ -440,3 +440,39 @@ class TestSyncProduct:
 
         assert result is True
         picqer.update_product.assert_not_called()
+
+    def test_returns_false_when_nothing_changed(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            name="Test Product Title",
+            weight=25,
+            productfields=[
+                {"title": "Beschikbaar", "value": ""},
+                {"title": "Verzend", "value": "DHL Small"},
+            ],
+        )
+        variant = self._make_variant()  # weight=25, stockTracking="indicator"
+
+        result = sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        assert result is False
+        picqer.update_product.assert_not_called()
+        picqer.get_product_tags.assert_not_called()
+
+    def test_manage_shipping_tags_skipped_when_shipping_unchanged(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            name="Old Name",
+            weight=25,
+            productfields=[
+                {"title": "Beschikbaar", "value": ""},
+                {"title": "Verzend", "value": "DHL Small"},
+            ],
+        )
+        variant = self._make_variant()  # name changed, shipping unchanged
+
+        result = sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        assert result is True
+        picqer.update_product.assert_called_once()
+        picqer.get_product_tags.assert_not_called()

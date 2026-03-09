@@ -124,8 +124,13 @@ def run_sync():
             continue
 
         try:
-            sync_product(picqer, variant, picqer_product, field_ids, tag_map, dry_run)
-            updated += 1
+            was_updated = sync_product(
+                picqer, variant, picqer_product, field_ids, tag_map, dry_run
+            )
+            if was_updated:
+                updated += 1
+            else:
+                skipped += 1
 
         except requests.RequestException as e:
             errors += 1

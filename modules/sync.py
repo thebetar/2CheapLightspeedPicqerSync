@@ -144,13 +144,19 @@ def sync_product(
 
     current_beschikbaar = ""
     current_aangemaakt = ""
+    current_verzend = ""
     for pf in picqer_product.get("productfields", []):
         if pf.get("title") == "Beschikbaar":
             current_beschikbaar = pf.get("value", "")
         if pf.get("title") == "Beschikbaar - Aangemaakt op":
             current_aangemaakt = pf.get("value", "")
+        if pf.get("title") == "Verzend":
+            current_verzend = pf.get("value", "")
 
     beschikbaar_changed = beschikbaar_value != current_beschikbaar
+    name_changed = title_long != picqer_product.get("name", "")
+    weight_changed = (weight_grams or 0) != picqer_product.get("weight", 0)
+    shipping_changed = shipping_option != current_verzend
 
     product_fields = build_product_fields(
         field_ids=field_ids,
@@ -167,6 +173,17 @@ def sync_product(
     }
 
     title_display = (title_long[:50] + "...") if len(title_long) > 50 else title_long
+
+    if not any([name_changed, weight_changed, beschikbaar_changed, shipping_changed]):
+        log.debug(
+            "SKU %s unchanged (weight=%s, ship=%s, tracking=%s), skipping",
+            sku,
+            weight_grams,
+            shipping_option,
+            stock_tracking,
+        )
+        return False
+
     log.info(
         "SKU %s → weight=%s, ship=%s, tracking=%s, title=%s",
         sku,
@@ -185,6 +202,7 @@ def sync_product(
     else:
         picqer.update_product(idproduct, payload)
 
-    manage_shipping_tags(picqer, idproduct, shipping_option, tag_map, dry_run)
+    if shipping_changed:
+        manage_shipping_tags(picqer, idproduct, shipping_option, tag_map, dry_run)
 
     return True
