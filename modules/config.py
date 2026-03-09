@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict, List
 
 from dotenv import load_dotenv
 
@@ -12,7 +13,7 @@ LIGHTSPEED_API_SECRET = os.getenv("LIGHTSPEED_API_SECRET")
 PICQER_BASE_URL = os.getenv("PICQER_BASE_URL")
 PICQER_API_KEY = os.getenv("PICQER_API_KEY")
 
-WEIGHT_SHIPPING_MAP: dict[int, str] = {
+WEIGHT_SHIPPING_MAP: Dict[int, str] = {
     2: "Briefpost",
     25: "DHL Small",
     1001: "DPD",
@@ -20,7 +21,7 @@ WEIGHT_SHIPPING_MAP: dict[int, str] = {
     50000: "Speciaal Transport",
 }
 
-SHIPPING_OPTIONS: list[str] = [
+SHIPPING_OPTIONS: List[str] = [
     "Briefpost",
     "DHL Small",
     "DHL XXL",
