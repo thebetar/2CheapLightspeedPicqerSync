@@ -22,7 +22,7 @@ class PicqerClient:
     def _request(self, method, url: str, **kwargs):
         """Make an HTTP request, retrying up to 5 times on 429 with a 60-second wait."""
         for attempt in range(1, 6):
-            response = method(url, **kwargs)
+            response = method(url, timeout=30, **kwargs)
             if response.status_code != 429:
                 response.raise_for_status()
                 return response

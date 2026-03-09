@@ -24,7 +24,7 @@ class LightspeedClient:
             try:
                 url = f"{self.base_url}/nl/{resource}.json"
                 resp = requests.get(
-                    url, auth=self.auth, params={"limit": 250, "page": page}
+                    url, auth=self.auth, params={"limit": 250, "page": page}, timeout=30
                 )
                 resp.raise_for_status()
                 items = resp.json().get(resource, [])
