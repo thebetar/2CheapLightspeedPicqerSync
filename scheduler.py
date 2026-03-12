@@ -3,15 +3,15 @@
 import schedule
 import time
 
-from main import run_sync
+from main import run_all_syncs
 from modules.config import log
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("06:00").do(run_sync)
-    schedule.every().day.at("10:00").do(run_sync)
-    schedule.every().day.at("14:00").do(run_sync)
-    schedule.every().day.at("20:00").do(run_sync)
+    schedule.every().day.at("06:00").do(run_all_syncs)
+    schedule.every().day.at("10:00").do(run_all_syncs)
+    schedule.every().day.at("14:00").do(run_all_syncs)
+    schedule.every().day.at("20:00").do(run_all_syncs)
 
     log.info("Scheduler started. Syncs at 06:00, 10:00, 14:00, 20:00")
     log.info("Next run: %s", schedule.next_run())

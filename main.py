@@ -12,13 +12,13 @@ Usage:
 
 import json
 import os
+from typing import Dict
 
 import requests
 
 from modules.config import (
-    LIGHTSPEED_API_KEY,
-    LIGHTSPEED_API_SECRET,
     LIGHTSPEED_BASE_URL,
+    LIGHTSPEED_SHOPS,
     PICQER_API_KEY,
     PICQER_BASE_URL,
     SHIPPING_OPTIONS,
@@ -40,7 +40,14 @@ TEST_SKUS = [
 ]
 
 
-def run_sync():
+def run_sync(shop: Dict[str, str]):
+    """Run sync for a single Lightspeed shop."""
+    shop_name = shop["name"]
+    api_key = shop["api_key"]
+    api_secret = shop["api_secret"]
+
+    log.info("=== Starting sync for shop: %s ===", shop_name)
+
     use_cache = os.getenv("USE_CACHE", "false").lower() == "true"
     dry_run = os.getenv("DRY_RUN", "false").lower() == "true"
 
@@ -56,14 +63,12 @@ def run_sync():
         log.info("Loading Lightspeed data from cache...")
         variants = LightspeedClient.load_variants_from_cache()
     else:
-        if not LIGHTSPEED_API_KEY or not LIGHTSPEED_API_SECRET:
+        if not api_key or not api_secret:
             raise RuntimeError(
-                "LIGHTSPEED_API_KEY and LIGHTSPEED_API_SECRET must be set in .env"
+                f"Lightspeed API credentials for {shop_name} must be set in .env"
             )
 
-        lightspeed = LightspeedClient(
-            LIGHTSPEED_BASE_URL, LIGHTSPEED_API_KEY, LIGHTSPEED_API_SECRET
-        )
+        lightspeed = LightspeedClient(LIGHTSPEED_BASE_URL, api_key, api_secret)
         variants, _ = lightspeed.fetch_variants()
 
     # 2) Initialise Picqer client & cache lookups
@@ -156,7 +161,8 @@ def run_sync():
             )
 
     log.info(
-        "Sync complete. Total=%d, Updated=%d, Skipped=%d, Errors=%d",
+        "Sync complete for %s. Total=%d, Updated=%d, Skipped=%d, Errors=%d",
+        shop_name,
         total,
         updated,
         skipped,
@@ -164,5 +170,14 @@ def run_sync():
     )
 
 
+def run_all_syncs():
+    """Run sync for all configured Lightspeed shops."""
+    for shop in LIGHTSPEED_SHOPS:
+        try:
+            run_sync(shop)
+        except Exception as e:
+            log.error("Sync failed for shop %s: %s", shop["name"], e, exc_info=True)
+
+
 if __name__ == "__main__":
-    run_sync()
+    run_all_syncs()

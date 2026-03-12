@@ -91,8 +91,8 @@ class LightspeedClient:
 
 if __name__ == "__main__":  # pragma: no cover
     url = os.getenv("LIGHTSPEED_BASE_URL")
-    key = os.getenv("LIGHTSPEED_API_KEY")
-    secret = os.getenv("LIGHTSPEED_API_SECRET")
+    key = os.getenv("2CHEAP_LIGHTSPEED_API_KEY")
+    secret = os.getenv("2CHEAP_LIGHTSPEED_API_SECRET")
 
     lightspeed = LightspeedClient(url, key, secret)
     variants = lightspeed.fetch_variants()

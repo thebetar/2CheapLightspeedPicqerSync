@@ -110,14 +110,22 @@ def build_product_fields(
         beschikbaar_changed or not current_aangemaakt
     )
 
-    if not needs_timestamp:
-        return fields
+    needs_clear_timestamp = beschikbaar_value != "LEVERTIJD" and bool(
+        current_aangemaakt
+    )
 
-    if "Beschikbaar - Aangemaakt op" in field_ids:
+    if needs_timestamp and "Beschikbaar - Aangemaakt op" in field_ids:
         fields.append(
             {
                 "idproductfield": field_ids["Beschikbaar - Aangemaakt op"],
                 "value": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
+    elif needs_clear_timestamp and "Beschikbaar - Aangemaakt op" in field_ids:
+        fields.append(
+            {
+                "idproductfield": field_ids["Beschikbaar - Aangemaakt op"],
+                "value": "",
             }
         )
 
@@ -157,6 +165,9 @@ def sync_product(
     name_changed = title_long != picqer_product.get("name", "")
     weight_changed = (weight_grams or 0) != picqer_product.get("weight", 0)
     shipping_changed = shipping_option != current_verzend
+    timestamp_needs_update = (
+        beschikbaar_value == "LEVERTIJD" and not current_aangemaakt
+    ) or (beschikbaar_value != "LEVERTIJD" and bool(current_aangemaakt))
 
     product_fields = build_product_fields(
         field_ids=field_ids,
@@ -174,7 +185,15 @@ def sync_product(
 
     title_display = (title_long[:50] + "...") if len(title_long) > 50 else title_long
 
-    if not any([name_changed, weight_changed, beschikbaar_changed, shipping_changed]):
+    if not any(
+        [
+            name_changed,
+            weight_changed,
+            beschikbaar_changed,
+            shipping_changed,
+            timestamp_needs_update,
+        ]
+    ):
         log.debug(
             "SKU %s unchanged (weight=%s, ship=%s, tracking=%s), skipping",
             sku,

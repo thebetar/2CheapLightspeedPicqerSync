@@ -7,11 +7,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 LIGHTSPEED_BASE_URL = os.getenv("LIGHTSPEED_BASE_URL", "https://api.webshopapp.com")
-LIGHTSPEED_API_KEY = os.getenv("LIGHTSPEED_API_KEY")
-LIGHTSPEED_API_SECRET = os.getenv("LIGHTSPEED_API_SECRET")
 
 PICQER_BASE_URL = os.getenv("PICQER_BASE_URL")
 PICQER_API_KEY = os.getenv("PICQER_API_KEY")
+
+LIGHTSPEED_SHOPS: List[Dict[str, str]] = [
+    {
+        "name": "2Cheap",
+        "api_key": os.getenv("2CHEAP_LIGHTSPEED_API_KEY", ""),
+        "api_secret": os.getenv("2CHEAP_LIGHTSPEED_API_SECRET", ""),
+    },
+    {
+        "name": "Keukenmesjes",
+        "api_key": os.getenv("KEUKENMESJES_LIGHTSPEED_API_KEY", ""),
+        "api_secret": os.getenv("KEUKENMESJES_LIGHTSPEED_API_SECRET", ""),
+    },
+]
 
 WEIGHT_SHIPPING_MAP: Dict[int, str] = {
     2: "Briefpost",

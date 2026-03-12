@@ -179,6 +179,40 @@ class TestBuildProductFields:
         result = build_product_fields({}, "DPD", "LEVERTIJD", beschikbaar_changed=True)
         assert result == []
 
+    def test_timestamp_cleared_when_not_levertijd_with_existing_timestamp(self):
+        field_ids = {
+            "Beschikbaar": 10,
+            "Verzend": 20,
+            "Beschikbaar - Aangemaakt op": 30,
+        }
+
+        result = build_product_fields(
+            field_ids,
+            "Briefpost",
+            "",
+            beschikbaar_changed=True,
+            current_aangemaakt="2026-01-01 00:00:00",
+        )
+
+        assert {"idproductfield": 30, "value": ""} in result
+
+    def test_timestamp_not_cleared_when_not_levertijd_and_no_existing_timestamp(self):
+        field_ids = {
+            "Beschikbaar": 10,
+            "Verzend": 20,
+            "Beschikbaar - Aangemaakt op": 30,
+        }
+
+        result = build_product_fields(
+            field_ids,
+            "Briefpost",
+            "",
+            beschikbaar_changed=False,
+            current_aangemaakt="",
+        )
+
+        assert not any(f["idproductfield"] == 30 for f in result)
+
 
 # -- manage_shipping_tags ----------------------------------------------------
 
@@ -415,6 +449,78 @@ class TestSyncProduct:
         )
         assert beschikbaar["value"] == ""
         assert not any(f["idproductfield"] == 30 for f in payload["productfields"])
+
+    def test_timestamp_cleared_when_changing_away_from_levertijd_with_existing_timestamp(
+        self,
+    ):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            productfields=[
+                {"title": "Beschikbaar", "value": "LEVERTIJD"},
+                {
+                    "title": "Beschikbaar - Aangemaakt op",
+                    "value": "2026-01-01 00:00:00",
+                },
+            ],
+        )
+        variant = self._make_variant(stockTracking="indicator")
+
+        sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        payload = picqer.update_product.call_args[0][1]
+        aangemaakt = next(
+            f for f in payload["productfields"] if f["idproductfield"] == 30
+        )
+        assert aangemaakt["value"] == ""
+
+    def test_not_skipped_when_levertijd_set_but_timestamp_missing(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            name="Test Product Title",
+            weight=25,
+            productfields=[
+                {"title": "Beschikbaar", "value": "LEVERTIJD"},
+                {"title": "Beschikbaar - Aangemaakt op", "value": ""},
+                {"title": "Verzend", "value": "DHL Small"},
+            ],
+        )
+        variant = self._make_variant(stockTracking="enabled")
+
+        result = sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        assert result is True
+        picqer.update_product.assert_called_once()
+        payload = picqer.update_product.call_args[0][1]
+        aangemaakt = next(
+            f for f in payload["productfields"] if f["idproductfield"] == 30
+        )
+        assert aangemaakt["value"] != ""
+
+    def test_not_skipped_when_stale_timestamp_needs_clearing(self):
+        picqer = self._make_picqer()
+        product = self._make_product(
+            name="Test Product Title",
+            weight=25,
+            productfields=[
+                {"title": "Beschikbaar", "value": ""},
+                {
+                    "title": "Beschikbaar - Aangemaakt op",
+                    "value": "2026-01-01 00:00:00",
+                },
+                {"title": "Verzend", "value": "DHL Small"},
+            ],
+        )
+        variant = self._make_variant(stockTracking="indicator")
+
+        result = sync_product(picqer, variant, product, self.FIELD_IDS, self.TAG_MAP)
+
+        assert result is True
+        picqer.update_product.assert_called_once()
+        payload = picqer.update_product.call_args[0][1]
+        aangemaakt = next(
+            f for f in payload["productfields"] if f["idproductfield"] == 30
+        )
+        assert aangemaakt["value"] == ""
 
     def test_null_weight_sends_zero_and_unknown_shipping(self):
         picqer = self._make_picqer()
